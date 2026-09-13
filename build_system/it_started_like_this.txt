@@ -1,0 +1,38 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#ifdef _WIN32
+#define CLEAR system ("cls")
+#define PATH_SEP "\\"
+#define EXT ".exe"
+#define DELETE "del"
+#else
+#define CLEAR system ("clear")
+#define PATH_SEP "/"
+#define EXT ".out"
+#define DELETE "rm"
+#endif
+
+#ifndef name
+#define name "main"
+#endif
+
+int main (void) {
+
+    CLEAR;
+
+    int succ = system
+    (
+        "g++ ./source/" name ".cpp "
+        /* Build Configuration */ // Start
+        ""
+        /* Build Configuration */ // End
+        " -o app" EXT
+    );
+
+    if (!succ) system ("." PATH_SEP "app");
+
+    return 0;
+}
+
+
