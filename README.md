@@ -235,11 +235,9 @@ The build configuration will be parsed, the file paths and search paths will all
 
 _The build system is up and running with ALL the major functionalities. I wont be documenting it right now, I have exams coming up, but I am really happy with the output._
 
-<div align="center">
-
 ![An example of how the build system looks.](.ignoreReadmeData\firstLookOfTheBuildSystem.png)
 
-</div>
+In the above section "Building", I mentioned of a file structure (of the build directory), I will make sure that from now onwards the build system gets refined each iteration. As of now, it is functionally consistent: _Linking works flawlessly._
 
 <br>
 
