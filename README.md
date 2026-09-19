@@ -6,17 +6,17 @@ _" I am learning OpenGL without any external Build System. I assume that I can a
 
 ### Policies
 
-**AI Policy** : I can use AI for learning and debugging, but I can not use any AI code. **0% of AI code**. (Pasting even an AI generated character is forbidden.)
+**AI Policy** : I can use AI for learning and debugging, but I can not use any AI code. **0% of AI code**. _(Pasting even an AI generated character is forbidden.)_
 > No AI use in related documentations as well (.md, .pdf, etc.) .
 
-**C Policy** : I am allowed to implement the build configuration in C, **BUT**, all of the OpenGL code and other self-written utilities must be C++ (Orthodox C++ counts as C use).
+**C Policy** : I am allowed to implement the build configuration in C, **BUT**, all of the OpenGL code and other self-written utilities must be C++ _(Orthodox C++ counts as C use)_.
 > Why? Because I lack in C++ programming skills.
 
 **Abstraction Policy** : Since the language of choice is C++, Object Orientation programming paradigm must be adapted and a proper layer of abstraction must be made.
 
-**Compler Policy** : I will be using GCC/G++ to compile the files to not MCVC linkage exceptions. 
+**Compiler Policy** : I will be using GCC/G++ to compile the files _(majorly to not get stuck in MCVC linkage exceptions)_. 
 
-**Completion Policy** : This project will be considered completed when I could use its abstraction layer to build something meaningful.
+**Compilation Policy** : This project will be considered completed when I could use its abstraction layer to build something meaningful.
 > RESULT.md must be made explaining how the final project (use of the abstraction) is meaningful.
 
 **External Library Policy** : I am not allowed to copy paste any external work into my code _(unless its a standard like lib stb)_.
@@ -59,7 +59,7 @@ _Static Linking_ involves taking the libraries' files and directly concatinating
 <br>
 
 #### Dynamic Linking
-_Dynamic Linking_ involves taking the libraries' files and then preparing for external linking. External linking means that, the actual process will not have the functions, but it will know where in the memory they are kept. So, at run-time, the operating system will load the functions into the primary memory so that the functions could be called.
+_Dynamic Linking_ involves taking the libraries' files and prepare the program such that they get linked at run time, such linking is called external linking. External linking means that, the actual process will not have the functions, but it will know where in the memory they are kept. So, at run-time, the operating system will load the functions into the primary memory so that the functions could be called.
 
 If all the functions are loaded at the start of the program, it is called _**Eager** Dynamic Linking_, but if a function is loaded upon its first call, its called _**Lazy** Dynamic Linking_.
 
@@ -113,7 +113,7 @@ COFF stands for _Common Object File Format_, meaning of the name is straigtforwa
 
 <br>
 
-In a POSIX complined operating system though, the binaries are NOT of COFF type, they are of ELF type. ELF stands for _Executable and Linkable Format_, meaning of the name is straigtforward. Each binaries get to choose what `.so` files they get to link with, irrespective to where they are in the entire memory.
+In a POSIX complined operating system though, the binaries are NOT of COFF type, they are of ELF type. ELF stands for _Executable and Linkable Format_, meaning of the name is straigtforward. Each binary get to choose what `.so` files they get to link with, irrespective to where they are in the entire memory.
 
 `-rpath` : Used to embed **run-time** paths into the binary. These paths will be searched at the time of run-time (dynamic) linking.
 
@@ -130,7 +130,7 @@ Why? There is no such reason apart from its easier to code. I will (in future) i
 
 <br>
 
-##### Using the build system
+#### Using the build system
 
 <u><i><div align="right">13th September 2026</div></i></u>
 
@@ -161,7 +161,9 @@ config {
 <br>
 
 `link` : Used to _**dynamically**_ link a library.
+
 `static_link` : Used to _**statically**_ link a library.
+
 `search` : Used to add search paths so that the compiler and the linker can find the libraries.
 > When `search` is used, the path is passed via -L and -I both. 
 
@@ -190,7 +192,7 @@ This entire build configuration is nothing but a C file. Logic can be integrated
 
 <br>
 
-##### Building
+#### Building
 As of now, the build system is just a saved compilation string, nothing else. It would truly be called a build system when it could handle run-time linking with no exceptions.
 
 Right now, dynamic linking is not handled, for that, I would have to implement the build directory.
@@ -226,12 +228,29 @@ The build configuration will be parsed, the file paths and search paths will all
 **Immediate Objective** is to only be able to copy all the dynamic libraries into the `at`-directory and then call it a consistent build system.
 
 <br>
+
+#### The Build System is completed
+
+<u><i><div align="right">20th September 2026</div></i></u>
+
+_The build system is up and running with ALL the major functionalities. I wont be documenting it right now, I have exams coming up, but I am really happy with the output._
+
+<div align="center">
+
+![An example of how the build system looks.](.ignoreReadmeData\firstLookOfTheBuildSystem.png)
+
+</div>
+
+<br>
+
+
 <hr>
 
 <div align="center">
 
 _No AI was used in the making of this Markdown file._
+
 _(I am not correcting my spelling mistakes, they are the part of this development.)_
 
-<div>
+</div>
 

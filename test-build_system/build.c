@@ -7,7 +7,7 @@ config {
     static_link "print.o";
 
     in "main.c";
-    
+
     out "app";
 
     run;
