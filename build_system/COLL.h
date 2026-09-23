@@ -11,6 +11,14 @@ This standalone header is being made to replace the use of any external build sy
 #include <stdlib.h>
 #include <string.h>
 
+#if defined(_WIN32)
+#define COLL__os_dynamic_lib_ext ".dll"
+#elif defined(__APPLE__)
+#define COLL__os_dynamic_lib_ext ".dylib"
+#else
+#define COLL__os_dynamic_lib_ext ".so"
+#endif
+
 #ifdef _WIN32
 #define COLL__os_path_sep '\\'
 #define COLL__os_empty_dir(_path) system("cmd /c if exist \"" _path "\" (rmdir /s /q \"" _path  "\") & mkdir \"" _path "\"")
@@ -173,7 +181,8 @@ for (                                               \
         else if (!strcmp(curr_str, "none")) break;                                                  \
         else printf(" \033[33m%4d\033[0m '%s'\n", index - curr, COLL_name(Copy, values)[curr]);     \
     }                                                                                               \
-)
+)                                                                                                   \
+
 
 #define link_string(...)            COLL_STRING(__VA_OPT__(__VA_ARGS__ +) 0, Dynamic, cmd_length, "-l:")
 #define static_link_string(...)     COLL_STRING(__VA_OPT__(__VA_ARGS__ +) 0, Static, cmd_length, "-l:")
@@ -284,7 +293,17 @@ int main (void) {                                       \
     }                                                                                                                                   \
     \
     show_copying;                                   \
+    \
     paste_files;                                    \
+    \
+    if (_dynamic) {                                                                                                                     \
+        printf(COLL_indent "Copying *" COLL__os_dynamic_lib_ext " to '\033[0m%s\033[35m'\033[0m\n", _build_dir ? _build_dir : ".");     \
+        COLL_FOREACH(Dynamic,                                                                                                           \
+            sprintf(cmd, COLL__os_copy_file_fstr "\n", elem, _build_dir ? _build_dir : ".");                                            \
+            system(cmd);                                                                                                                \
+            printf(" \033[33m%4d\033[0m '%s'\n", index + 1, elem);                                                                      \
+        );                                                                                                                              \
+    }                                                                                                                                   \
     \
     sprintf(c_cmdf, c_cmd,                          \
         _inputs ? _inputs_string : "",              \

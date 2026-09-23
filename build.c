@@ -5,16 +5,13 @@ config {
 
     libc;
 
-    link "add.dll.a";
-
-    copy "add.dll";
-    paste "BUILD\\new";
+    link ".\\libadd\\add.dll";
 
     in "main.c";
 
     out "run";
 
-    build "BUILD\\new";
+    // build ".\\build";
 
     run;
 

@@ -1,0 +1,13 @@
+
+1:
+to-fix : 12:00 AM 9/24/2026
+-rpath is handles as set-to-origin in POSIX, but the the .so files never get copied to the build directory.
+    fix : update the code so that each file in the Dynamic COLL List gets copied to the build directory.
+    fixed : 1:43 AM 9/24/2026
+
+2:
+to-fix : 12:10 AM 9/24/2026
+COLL_STRING can be more efficient.
+    fix: Use of for loop and not sprintf is unnecessary.
+    Also, instead of flag, pre and variadic operator (...) can be used.
+    fixed : not-fixed

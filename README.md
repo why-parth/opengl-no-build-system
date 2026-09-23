@@ -265,7 +265,9 @@ config {
 
 Once you include the `COLL.h` header, the `.c` file then becomes the build configuration. And to _**build**_ the _**build configuration**_, all you have to do is compile the C file and run it.
 
-> `>>>` ```gcc .\build.c -o build; if ($?) {.\build}```
+> Windows : `>>>` ```gcc .\build.c -o build; if ($?) {.\build}```
+
+> Apple and Linux : `>>>` ```gcc .\build.c -o build && .\build```
 
 <br>
 
@@ -314,7 +316,7 @@ config {
 
 **Directory Instructions**
 
-`build` : Set the path of the build directory.
+`build` : Set the path of the build directory. _(previously used `at` does not work now.)_
 
 > By default, the build directory is the directory that calls the build (the `"."` directory).
 
