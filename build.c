@@ -5,18 +5,16 @@ config {
 
     libc;
 
-    in ".\\main.c";
+    link "add.dll.a";
 
-    static_link "add.dll.a";
+    copy "add.dll";
+    paste "BUILD\\new";
 
-    search "libadd";
+    in "main.c";
 
     out "run";
 
-    build ".\\Build";
-
-    copy ".\\libadd\\add.dll";
-    paste ".\\Build";
+    build "BUILD\\new";
 
     run;
 

@@ -213,7 +213,7 @@ int main (void) {                                       \
     \
     char c_cmd[] = "gcc %s %s -o %s "                   \
     "-L. -I. %s %s %s %s";                              \
-    char c_cmdf[10 + 3 * cmd_length];                   \
+    char c_cmdf[10 + 7 * cmd_length];                   \
     char c_cmdf_colored[10 + 3 * cmd_length];           \
     unsigned int c_cmdf_colored_i = 0;                  \
     unsigned int c_cmdf_color = 0;                      \

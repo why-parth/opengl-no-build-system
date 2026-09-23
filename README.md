@@ -173,7 +173,7 @@ config {
 
     libc;
 
-    in main.c; // Uses a function named 'add' that is not defined.
+    in "main.c"; // Uses a function named 'add' that is not defined.
     
     static_link "libadd.o"; // Static Linking of the 'add' function used in the main.c
 
@@ -235,7 +235,6 @@ The build configuration will be parsed, the file paths and search paths will all
 
 _The build system is up and running with ALL the major functionalities. I wont be documenting it right now, I have exams coming up, but I am really happy with the output._
 
-
 <div align="center">
 
 ![An example of how the build system looks.](./.ignoreReadmeData/firstLookOfTheBuildSystem.png)
@@ -246,6 +245,205 @@ In the above section "Building", I mentioned of a file structure (of the build d
 
 <br>
 
+
+#### `COLL.h`
+
+<u><i><div align="right">23rd September 2026</div></i></u>
+
+`COLL.h` of COLL is the build system. To use it, all you have to do is simply include the header. The header is standalone, i.e. it has its _cross-OS_ implementation within itself.
+
+```C
+#include <COLL.h> // You will need to locate the file correctly
+
+config {
+
+}
+```
+> `No Input File`
+
+<br>
+
+Once you include the `COLL.h` header, the `.c` file then becomes the build configuration. And to _**build**_ the _**build configuration**_, all you have to do is compile the C file and run it.
+
+> `>>>` ```gcc .\build.c -o build; if ($?) {.\build}```
+
+<br>
+
+**I/O Instructions**
+
+`in` : Add the path input file.
+`out` : Define the name of the output file.
+> `in` takes in path, and `out` takes in the file name (NOT the path).
+
+> `in` can be used as many times as you want, but `out` can be used only once.
+
+Now we can make out first build configuration.
+
+```C
+#include <COLL.h> // You will need to locate the file correctly
+
+config {
+    in "main.c";
+    out "app";
+}
+```
+> `Linker Error ...`
+
+<br>
+
+By default, the build configuration does not link with libc. We have to manually tell the config to link it with libc using the instruction `libc;`.
+
+We can also automatically launch the executable immediately after the compilation using the instruction `run;`.
+
+```C
+#include <COLL.h>
+
+config {
+    libc;
+    in "main.c";
+    out "app";
+    run;
+}
+```
+> `This string is being printed by the 'main.c' C source file.`
+
+<br>
+
+**Directory Instructions**
+
+`build` : Set the path of the build directory.
+> By default, the build directory is the directory that calls the build (the `"."` directory).
+
+`search` : Add a path to both _(1)_ compile-time include paths and _(2)_ link-time search path.  
+`copy` : Append the build-time copy path list.
+`paste` : Paste each path in the build-time copy path list.
+
+> `copy none;` can be used to clear the copy path list.
+```C
+#include <COLL.h>
+
+config {
+    /* Order of instructions does not matter. */
+
+    out "app"; 
+
+    in "img_dimensions.c";
+
+    /* Although the order of instructions DOES NOT matter,
+    the order of copy and paste DOES matter. */
+    copy "../some_folder/images/img.png";
+    paste "./build";
+
+    build "./build";
+
+    run;
+    libc;
+}
+```
+> `Image found ['./img.png']`
+
+<br>
+
+_**NOTE**_
+_When passing paths, always use "." at the start if the file is in the same directory, or else the cross-OS parsing mechanism may fail. I will make sure that this bug is fixed, but for now, do not take any risk and use the explicitly defined path with a starting "." (or "..")._
+
+<br>
+
+**Linking Instructions**
+
+`link` : Dynamically link the library.
+`static_link` : Statically link the library.
+```C
+#include <COLL.h>
+
+config {
+    libc;
+
+    in "main.c";
+    out "app"; 
+
+    link "./lib1.so";       // Dynamic Linking
+    static_link "./lib2.a"; // Static Linking
+
+    build "./build";
+
+    run;
+}
+```
+> `main.c is running...`
+
+<br>
+
+In windows you need to statically link a stub file `.dll.a` of the library, and then use `copy`-`paste` to paste the `.dll` into the build directory.
+```C
+#include <COLL.h>
+
+config {
+    libc;
+
+    in "main.c";
+    out "app"; 
+
+    static_link ".\\lib1.dll.a"; // Dynamic Linking
+    static_link ".\\lib2.a";     // Static Linking
+
+    copy ".\\lib1.dll";
+    paste ".\\build";
+
+    build ".\\build";
+
+    run;
+}
+```
+> `main.c is running...`
+
+<br>
+
+#### `libs`
+
+`libs.c` is a C file that comes with the build system and serves as a utility that may come extreamly useful in creating build configurations.
+
+> `>>>` ```gcc .\libs.c -o libs```
+
+<br>
+
+`libs.c` can be compiled into `libs` (executable), and this executable is a cross-OS command line utility that converts C files into a library.
+
+On Apple and on Linux,
+> `>>>` ```libs add.c```
+> `Created 'add.o'`
+> `Created 'add.a'`
+> `Created 'add.so'`
+
+On Windows,
+> `>>>` ```libs add.c```
+> `Created 'add.o'`
+> `Created 'add.lib'`
+> `Created 'add.dll'`
+> `Created 'add.dll.a'`
+
+<br>
+
+**Flags**
+`-o` : Used to define the output name.
+> `-o` can also define the full path of the library files.
+>
+> `>>>` `libs add.c -o "libadd"`
+> This will create the library files named as `libadd.o`, `libadd.a` and `libadd.so`.
+>
+> `>>>` `libs add.c -o "libraries/libadd"`
+> This will also create the library files named as `libadd.o`, `libadd.a` and `libadd.so` BUT in the directory `"./libraries"`.
+>
+> the last identifier seperated by the `'\\'` or `'/'` is always the name of the library, but anything before it is path.
+> `-o <optional path>/<filename>`
+
+`-w` : Makes sure that the output directory is overwritten when the library is made there.
+
+<br>
+
+This tool `libs` becomes very help full in completing the library driven environment of build.
+
+Since COLL is a C framework that integrates with C, we can use `libs` and `system` (from `stdlib`) to construct ahead-of-time library creation for big builds. _(It is not something small builds need to worry about.)_
 
 <hr>
 
