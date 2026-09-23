@@ -272,7 +272,9 @@ Once you include the `COLL.h` header, the `.c` file then becomes the build confi
 **I/O Instructions**
 
 `in` : Add the path input file.
+
 `out` : Define the name of the output file.
+
 > `in` takes in path, and `out` takes in the file name (NOT the path).
 
 > `in` can be used as many times as you want, but `out` can be used only once.
@@ -305,6 +307,7 @@ config {
     run;
 }
 ```
+
 > `This string is being printed by the 'main.c' C source file.`
 
 <br>
@@ -312,13 +315,17 @@ config {
 **Directory Instructions**
 
 `build` : Set the path of the build directory.
+
 > By default, the build directory is the directory that calls the build (the `"."` directory).
 
 `search` : Add a path to both _(1)_ compile-time include paths and _(2)_ link-time search path.  
+
 `copy` : Append the build-time copy path list.
+
 `paste` : Paste each path in the build-time copy path list.
 
 > `copy none;` can be used to clear the copy path list.
+
 ```C
 #include <COLL.h>
 
@@ -352,7 +359,9 @@ _When passing paths, always use "." at the start if the file is in the same dire
 **Linking Instructions**
 
 `link` : Dynamically link the library.
+
 `static_link` : Statically link the library.
+
 ```C
 #include <COLL.h>
 
@@ -395,6 +404,7 @@ config {
     run;
 }
 ```
+
 > `main.c is running...`
 
 <br>
@@ -425,7 +435,9 @@ On Windows,
 <br>
 
 **Flags**
+
 `-o` : Used to define the output name.
+
 > `-o` can also define the full path of the library files.
 >
 > `>>>` `libs add.c -o "libadd"`
