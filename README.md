@@ -250,7 +250,7 @@ In the above section "Building", I mentioned of a file structure (of the build d
 
 <u><i><div align="right">23rd September 2026</div></i></u>
 
-`COLL.h` of COLL is the build system. To use it, all you have to do is simply include the header. The header is standalone, i.e. it has its _cross-OS_ implementation within itself.
+`COLL.h` or COLL is a build system. To use it, all you have to do is simply include its header. Its header is standalone, i.e. it has its _cross-OS_ implementation within itself.
 
 ```C
 #include <COLL.h> // You will need to locate the file correctly
@@ -273,18 +273,18 @@ Once you include the `COLL.h` header, the `.c` file then becomes the build confi
 
 **I/O Instructions**
 
-`in` : Add the path input file.
+`in` : Add the path of an input file.
 
-`out` : Define the name of the output file.
+`out` : Define the name of the final output executable.
 
 > `in` takes in path, and `out` takes in the file name (NOT the path).
 
 > `in` can be used as many times as you want, but `out` can be used only once.
 
-Now we can make out first build configuration.
+Now we can make our first build configuration.
 
 ```C
-#include <COLL.h> // You will need to locate the file correctly
+#include <COLL.h>
 
 config {
     in "main.c";
@@ -295,9 +295,9 @@ config {
 
 <br>
 
-By default, the build configuration does not link with libc. We have to manually tell the config to link it with libc using the instruction `libc;`.
+By default, the build configuration does not link with libc. We have to manually define it in our configuration to link with libc using the instruction `libc;`.
 
-We can also automatically launch the executable immediately after the compilation using the instruction `run;`.
+We can also automatically launch the executable immediately after the build using the instruction `run;`.
 
 ```C
 #include <COLL.h>
@@ -320,7 +320,7 @@ config {
 
 > By default, the build directory is the directory that calls the build (the `"."` directory).
 
-`search` : Add a path to both _(1)_ compile-time include paths and _(2)_ link-time search path.  
+`search` : Add a path to both _(1)_ compile-time include paths and _(2)_ link-time search paths.  
 
 `copy` : Append the build-time copy path list.
 
@@ -354,6 +354,7 @@ config {
 <br>
 
 _**NOTE**_
+
 _When passing paths, always use "." at the start if the file is in the same directory, or else the cross-OS parsing mechanism may fail. I will make sure that this bug is fixed, but for now, do not take any risk and use the explicitly defined path with a starting "." (or "..")._
 
 <br>
@@ -423,15 +424,22 @@ config {
 
 On Apple and on Linux,
 > `>>>` ```libs add.c```
+
 > `Created 'add.o'`
+
 > `Created 'add.a'`
+
 > `Created 'add.so'`
 
 On Windows,
 > `>>>` ```libs add.c```
+
 > `Created 'add.o'`
+
 > `Created 'add.lib'`
+
 > `Created 'add.dll'`
+
 > `Created 'add.dll.a'`
 
 <br>
@@ -458,6 +466,110 @@ On Windows,
 This tool `libs` becomes very help full in completing the library driven environment of build.
 
 Since COLL is a C framework that integrates with C, we can use `libs` and `system` (from `stdlib`) to construct ahead-of-time library creation for big builds. _(It is not something small builds need to worry about.)_
+
+<br>
+
+
+
+
+<u><i><div align="right">3rd October 2026</div></i></u>
+
+_"I did not append the repository for quite a while because I was indulged in learning the core of OpenGL, which I belive I have learnt. (i guess)"_
+
+<br>
+
+#### GLFW
+
+GLFW (Open**GL** **F**rame**W**ork) is a C framework that manages _window creation_. It is cross OS, it wraps up all of its interface in macros that expand as per the OS, therefore, code written using GLFW will compile and run in any OS flawlessly.
+
+To use GLFW, its library must be linked, and its header must be included.
+
+COLL (our own build system can do this task easily).
+
+```C
+#include "build_system/COLL.h"
+
+config {
+
+    C++;    // C++ is used, use g++ to compile the code.
+    libc;   // Allow the compiler to link libc automatically.
+    build ".\\build";   // Name of the build directory
+
+    /* Linking GLFW */
+    static_link ".\\library\\glfw\\libglfw3dll.a";  // Statically linking the import library for glfw3.dll .
+    
+    /* Copy and Paste */
+    copy ".\\library\\glfw\\glfw3.dll"; // Copying the dll for dynamic linking.
+    paste ".\\build";   // Where to paste the copied files
+
+    /* Input Files */
+    in ".\\source\\main.cpp"; // Main input file
+    in ".\\source\\gl.c"; // GLAD
+
+    /* Output Name */
+    out "run"; // Name of the application (executable)
+
+    /* Run */
+    run; // The application will launch immediately after building.
+
+}
+```
+
+> GLAD in the 'Input Files' section is explained below.
+
+<br>
+
+#### GLAD
+
+GLAD (Open**GL** **A**daptive **D**evelopment) is the full interface of OpenGL.
+
+It is **ONLY** the list of functions (symbols) that the compiler would still need to resolve. 
+
+However, unlike normal symbol resolution, the implementation of GLAD does not come from a library, it comes from the drivers that exist on the hardware. Each of the GLAD's function is some driver operation (processes).
+
+<div align="center">
+
+OS Calls : `GLFW`
+Interface : `GLAD`
+Implementation : `Some_Driver_Process()`
+
+</div>
+
+GLAD is only a list of **un-resolved** functions, those functions must be linked with (pointed to) correct driver processes. GLFW is the actual client that has the ability to talk to the driver via OS calls.
+
+<br>
+
+GLFW provides a function  `glfwGetProcAddress(...)` that helps GLAD in resolving the functions. The _"Get Process Address"_ in the name of the function refers to what the function does internally, this function points to various processes that the driver knows how to do.
+
+Using this function `glfwGetProcAddress(...)`, GLAD becomes eligible to look for all the OpenGL functions (driver processes) and thus, GLAD is initialized via GLFW.
+
+
+<br>
+
+#### OpenGL
+
+GLFW and GLAD is all you need to work with OpenGL, theoretically. In practice, there are many things to come yet.
+
+From now onwards, we are also going to be discussig these of the core OpenGL topics:
+- OpenGL as a Context Machine
+- Shaders : GPU Code
+- `VAO`, `VBO` & `EBO`
+- More on `VAO`
+- Uniforms
+- Textures
+
+<br>
+
+Then, finally the topic that I am currently figuring out : _Text Rendering_
+**[** _For future me, Date and Time of when I have resolved the Text Rendering : ?_ **]**
+
+_The problem with Text Rendering is that its library (for Windows) is compiled using MSVC, and I am using GCC to compile my code, thus the symbols can not be resolved due to incompatible ABIs. The solution is to re-compile the library using the original C source code._
+
+_I have already prepared a utility `libs.exe` for such times, but I will need to upgrade it to be able to compile multiple C source files at once._
+
+
+
+
 
 <hr>
 

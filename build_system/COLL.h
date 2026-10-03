@@ -24,11 +24,17 @@ This standalone header is being made to replace the use of any external build sy
 #define COLL__os_empty_dir(_path) system("cmd /c if exist \"" _path "\" (rmdir /s /q \"" _path  "\") & mkdir \"" _path "\"")
 #define COLL__os_empty_dir_fstr "cmd /c if exist \"%s\" (rmdir /s /q \"%s\") & mkdir \"%s\""
 #define COLL__os_copy_file_fstr " copy \"%s\" \"%s\" >nul "
+#define COLL__os_exec_ext ".exe"
+#include <direct.h>
+#define COLL__os_chdir  _chdir
 #else
 #define COLL__os_path_sep '/'
 #define COLL__os_empty_dir(_path) system("rm -rf \"" _path "\"; mkdir \"" _path "\"")
 #define COLL__os_empty_dir_fstr "rm -rf \"%s\"; mkdir \"%s\""
 #define COLL__os_copy_file_fstr " \\cp -f \"%s\" \"%s\" > /dev/null 2>&1 "
+#define COLL__os_exec_ext ""
+#include <unistd.h>
+#define COLL__os_chdir  chdir
 #endif
 
 #define COLL__os_empty_dir_printf_str(_path) COLL__os_empty_dir_fstr, _path, _path, _path
@@ -101,6 +107,8 @@ for (                                               \
 }
 
 #ifndef COLL_no_implementation
+
+#define C __compiler__
 
 #ifndef static_links
 #define static_links    10
@@ -209,6 +217,7 @@ linker_search;                                          \
 static_linking;                                         \
 dynamic_linking;                                        \
 copying_files;                                          \
+int __compiler__ = 0;                                   \
 char * _output_name = NULL;                             \
 char _output_fullname[cmd_length];                      \
 int _run_output = 0;                                    \
@@ -217,10 +226,10 @@ char * _build_dir = NULL;                               \
 char * _copy_dest = NULL;                               \
 char cmd[cmd_length];                                   \
 void __config__(void);                                  \
-int main (void) {                                       \
+int main (int argc, const char * argv[]) {              \
     __config__();                                       \
     \
-    char c_cmd[] = "gcc %s %s -o %s "                   \
+    char c_cmd[] = "%s %s %s -o %s "                    \
     "-L. -I. %s %s %s %s";                              \
     char c_cmdf[10 + 7 * cmd_length];                   \
     char c_cmdf_colored[10 + 3 * cmd_length];           \
@@ -241,6 +250,8 @@ int main (void) {                                       \
     \
     printf("\033[33mConfiguration \n\033[0m");          \
     \
+    c_cmdf_colored_i += sprintf(c_cmdf_colored + c_cmdf_colored_i, "\033[1;33m%s ", __compiler__ ? "g++" : "gcc");                      \
+    \
     if (_inputs) {                                                                                                                      \
     show_in;                                                                                                                            \
     input_files_string(_inputs_string);                                                                                                 \
@@ -248,7 +259,7 @@ int main (void) {                                       \
     }                                                                                                                                   \
     else { printf("\033[1;31m\nError : No Input Files!\n\033[0m"); return -1; }                                                         \
     \
-    c_cmdf_colored_i += sprintf(c_cmdf_colored + c_cmdf_colored_i, "\n   \033[1;3;31m%s\033[0m ", _stdlib ? "" : "-nostdlib");         \
+    c_cmdf_colored_i += sprintf(c_cmdf_colored + c_cmdf_colored_i, "\n   \033[1;3;31m%s\033[0m ", _stdlib ? "" : "-nostdlib");          \
     \
     sprintf(_output_fullname, "%s%c%s", _build_dir ? _build_dir : ".", COLL__os_path_sep, _output_name);\
     \
@@ -258,7 +269,7 @@ int main (void) {                                       \
     \
     c_cmdf_colored_i += sprintf(c_cmdf_colored + c_cmdf_colored_i, "\033[22;3;39m%s\033[0m", COLL_rpath_handle);                        \
     \
-    c_cmdf_colored_i += sprintf(c_cmdf_colored + c_cmdf_colored_i, "\033[1;34m-L. \033[1;36m-I.\033[0m ");                             \
+    c_cmdf_colored_i += sprintf(c_cmdf_colored + c_cmdf_colored_i, "\033[1;34m-L. \033[1;36m-I.\033[0m ");                              \
     if (_search) {                                                                                                                      \
     show_searches;                                                                                                                      \
     linker_search_string(_search_string);                                                                                               \
@@ -303,9 +314,10 @@ int main (void) {                                       \
             system(cmd);                                                                                                                \
             printf(" \033[33m%4d\033[0m '%s'\n", index + 1, elem);                                                                      \
         );                                                                                                                              \
-    }                                                                                                                                   \
+    }                                                                                                                            \
     \
     sprintf(c_cmdf, c_cmd,                          \
+        __compiler__ ? "g++" :"gcc",                \
         _inputs ? _inputs_string : "",              \
         _stdlib ? "" : "-nostdlib ",                \
         _output_fullname,                           \
@@ -321,8 +333,11 @@ int main (void) {                                       \
     putchar('\n');                                                              \
     \
     if ((!system(c_cmdf)) && _run_output) {                                     \
-        sprintf(c_cmdf, "%s",  _output_fullname);                               \
-        printf( COLL_indent "\033[1;33m%s\033[0m\n", c_cmdf);                   \
+        if (_build_dir) COLL__os_chdir(_build_dir);                             \
+        sprintf(c_cmdf,                                                         \
+            ".%c%s" COLL__os_exec_ext, COLL__os_path_sep, _output_name);        \
+        printf(COLL_indent "[%s] \033[1;33m%s\033[0m\n",                        \
+            _build_dir, c_cmdf);                                                \
         system(c_cmdf);                                                         \
     };                                                                          \
     return 0;                                                                   \
@@ -337,3 +352,6 @@ void __config__(void)
 The goal of this header is to make an interface that makes it possible to keep track of what libraries to link statically and dynmaically.
 6:56 AM of 9/13/2026, the build system is fully completed, I just have to standardise it. Before that, I have to add the -rpath flag for POSIX, use a buffer flushing system to draw the final command, and then link stdlib and set that as the smoke test of this build system.
 */
+
+// COLL IDE -> One day, I will make this Build System again outside of this project.
+// The build would just open up a terminal where you could edit and trigger the build.
