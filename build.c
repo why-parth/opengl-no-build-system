@@ -10,9 +10,14 @@ config {
 
     /* Linking GLFW */
     static_link ".\\library\\glfw\\libglfw3dll.a";
+    static_link ".\\library\\ft\\libft.dll.a";
+
+    /* Search Directories */
+    search ".\\include\\ft";
     
     /* Copy and Paste */
     copy ".\\library\\glfw\\glfw3.dll";
+    copy ".\\library\\ft\\libft.dll";
     copy ".\\source\\shader.vertex.glsl";
     copy ".\\source\\shader.fragment.glsl";
     copy ".\\textures\\Bricks\\Bricks_Color.jpg";

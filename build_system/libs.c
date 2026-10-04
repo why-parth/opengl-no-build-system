@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define cmd_length 1024
+#define cmd_length 4096
 
 #ifdef _WIN32 
 #define LIBS__os_shared_object_flag " -shared \"-Wl,--out-implib,%.*s.dll.a\" "
@@ -52,7 +52,23 @@ int main(int argc, const char * argv[]) {
     char output_name[cmd_length];
     char * output_path;
 
+    char shared_lib_input[cmd_length];
+    unsigned int shared_lib_input_i = 0;
+    char shared_static_lib_input[cmd_length];
+    unsigned int shared_static_lib_input_i = 0;
+
+    
+
     int overwrite = 0;
+
+    int multi = 0;
+
+    int gcc = 0;
+    char gcc_string[cmd_length] = ""; 
+    unsigned int gcc_string_i = 0; 
+
+    int shared_only = 0;
+    char temp_output_path[cmd_length];
 
     switch (argc)
     {
@@ -64,7 +80,15 @@ int main(int argc, const char * argv[]) {
         // Flag Pass
         for (int i = 1; i < argc; i++) {
 
+            if (gcc) {
+                gcc_string_i += sprintf(gcc_string + gcc_string_i, "%s ", argv[i]);
+            }
+
             switch (argv[i][0]) {
+                case ':':
+                gcc = i;
+                break;
+
                 case '-':
                     flag_i[flags++] = i;
                     if (!strcmp(argv[i] + 1, "o")) {
@@ -92,116 +116,176 @@ int main(int argc, const char * argv[]) {
                         }
                     }
 
-                    if (!strcmp(argv[i] + 1, "w")) {
+                    else if (!strcmp(argv[i] + 1, "w")) {
                         overwrite = 1;
                     }
+
+                    else if (!strcmp(argv[i] + 1, "f")) {
+                        shared_only = 1;
+                    }
+
+                    break;
+
+                default:
+                    multi++;
             }
 
         }
+        
+        multi = multi > 1;
 
         // Library Creation
         for (int i = 1; i < argc; i++) {
+            if (i == gcc) break;
 
             for (int j = 0; j < flags; j++) if (flag_i[j] == i) goto CONTINUE;
 
             output_path = output_defined ? output_name : (char *)argv[i];
 
-            // Static Library
-            sprintf(
-                sys_cmd, " \033[45m \033[49;1;33m gcc \033[1;32m%s\033[3;34m \033[0m\033[3m-c -o \033[1;33m%.*s.o\033[0m",
-                argv[i],
-                (size_t)(strrchr(output_path + 2, '.')) - (size_t)(output_path),
-                output_path
-            );
-            printf(sys_cmd);
-            putchar('\n');
+            printf("\033[35m '%s'\033[0m", argv[i]);
 
+            shared_static_lib_input_i += sprintf(shared_static_lib_input + shared_static_lib_input_i, "%.*s%s ",
+            (size_t)(strrchr(output_path + 2, multi ? LIBS__os_path_sep : 0)) - (size_t)(output_path) + 1,
+            output_path,
+            multi ? strrchr(argv[i], LIBS__os_path_sep) + 1 : ".o");
+            *(shared_static_lib_input + shared_static_lib_input_i - 2) = 'o';
+
+            shared_lib_input_i += sprintf(shared_lib_input + shared_lib_input_i, "%s ", argv[i]);
+
+
+
+            // Static Library
+            if (!shared_only) {
+                    sprintf(
+                    sys_cmd, " \033[45m \033[49;1;33m gcc \033[1;32m%s\033[3;34m \033[0m\033[3m-c -o \033[1;33m%.*s%.*s.o%c"
+                    "   \033[22;3;36m%s\033[0m",
+                    argv[i],
+
+                    (size_t)(strrchr(output_path + 2, multi ? LIBS__os_path_sep : '.')) - (size_t)(output_path) + 1,
+                    output_path,
+                    
+                    strrchr(strrchr(argv[i], LIBS__os_path_sep) + 1, '.') - (strrchr(argv[i], LIBS__os_path_sep) + 1),
+                    multi ? strrchr(argv[i], LIBS__os_path_sep) + 1 : "",
+                    
+                    gcc ? '\n' : ' ',
+                    gcc_string
+                );
+                
+                printf(sys_cmd);
+                putchar('\n');
+            }
             
             sprintf(
-                sys_cmd, "gcc %s -c -o %.*s.o",
+                sys_cmd, "gcc %s -c -o %.*s%.*s.o %s",
                 argv[i],
-                (size_t)(strrchr(output_path + 2, '.')) - (size_t)(output_path),
-                output_path
+                (size_t)(strrchr(output_path + 2, multi ? LIBS__os_path_sep : '.')) - (size_t)(output_path) + 1,
+                output_path,
+
+                strrchr(strrchr(argv[i], LIBS__os_path_sep) + 1, '.') - (strrchr(argv[i], LIBS__os_path_sep) + 1),
+                multi ? strrchr(argv[i], LIBS__os_path_sep) + 1 : "",
+
+                gcc_string
             );
             system(sys_cmd);
 
 
             // Archiving Static Library
-            sprintf(
-                sys_cmd, "   \033[1;33mar \033[3;34mrcs \033[0m\033[1;33m%.*s.a \033[32m%.*s.o\033[0m",
-                (size_t)(strrchr(output_path + 2, '.')) - (size_t)(output_path),
-                output_path,
-                (size_t)(strrchr(output_path + 2, '.')) - (size_t)(output_path),
-                output_path
-            );
-            printf(sys_cmd);
-            putchar('\n');
+            if (!shared_only) {
+                    sprintf(
+                    sys_cmd, " \033[45m \033[49;1;33m ar \033[3;34mrcs \033[0m\033[1;33m%.*s%.*s.a \033[32m%.*s%.*s.o\033[0m",
+                    (size_t)(strrchr(output_path + 2, multi ? LIBS__os_path_sep : '.')) - (size_t)(output_path) + 1,
+                    output_path,
+
+                    strrchr(strrchr(argv[i], LIBS__os_path_sep) + 1, '.') - (strrchr(argv[i], LIBS__os_path_sep) + 1),
+                    multi ? strrchr(argv[i], LIBS__os_path_sep) + 1 : "",
+
+                    (size_t)(strrchr(output_path + 2, multi ? LIBS__os_path_sep : '.')) - (size_t)(output_path) + 1,
+                    output_path,
+
+                    strrchr(strrchr(argv[i], LIBS__os_path_sep) + 1, '.') - (strrchr(argv[i], LIBS__os_path_sep) + 1),
+                    multi ? strrchr(argv[i], LIBS__os_path_sep) + 1 : ""
+
+                );
+                printf(sys_cmd);
+                putchar('\n');
+            }
             
             sprintf(
-                sys_cmd, "ar rcs %.*s.a %.*s.o",
-                (size_t)(strrchr(output_path + 2, '.')) - (size_t)(output_path),
+                sys_cmd, "ar rcs %.*s%.*s.a %.*s%.*s.o",
+                (size_t)(strrchr(output_path + 2, multi ? LIBS__os_path_sep : '.')) - (size_t)(output_path) + 1,
                 output_path,
-                (size_t)(strrchr(output_path + 2, '.')) - (size_t)(output_path),
-                output_path
+
+                strrchr(strrchr(argv[i], LIBS__os_path_sep) + 1, '.') - (strrchr(argv[i], LIBS__os_path_sep) + 1),
+                multi ? strrchr(argv[i], LIBS__os_path_sep) + 1 : "",
+
+                (size_t)(strrchr(output_path + 2, multi ? LIBS__os_path_sep : '.')) - (size_t)(output_path) + 1,
+                output_path,
+
+                strrchr(strrchr(argv[i], LIBS__os_path_sep) + 1, '.') - (strrchr(argv[i], LIBS__os_path_sep) + 1),
+                multi ? strrchr(argv[i], LIBS__os_path_sep) + 1 : ""
+
             );
             system(sys_cmd);
 
-
-            // Dynamic Library
-            sprintf(
-                sys_cmd, " \033[45m \033[49;1;33m gcc \033[1;32m%s\033[3;34m" LIBS__os_shared_object_flag "\033[0m\033[3m-o \033[0m\033[1;33m%.*s" LIBS__os_shared_object_filetype "\033[0m",
-                argv[i],
-                #ifdef _WIN32
-                (size_t)(strrchr(output_path + 2, '.')) - (size_t)(output_path),
-                output_path,
-                #endif
-                (size_t)(strrchr(output_path + 2, '.')) - (size_t)(output_path),
-                output_path
-            );
-            printf(sys_cmd);
-            putchar('\n');
-            
-            sprintf(
-                sys_cmd, "gcc %s" LIBS__os_shared_object_flag "-o %.*s" LIBS__os_shared_object_filetype,
-                argv[i],
-                #ifdef _WIN32
-                (size_t)(strrchr(output_path + 2, '.')) - (size_t)(output_path),
-                output_path,
-                #endif
-                (size_t)(strrchr(output_path + 2, '.')) - (size_t)(output_path),
-                output_path
-            );
-            system(sys_cmd);
-
-
-            /*
-            NOT using this, the dlltool is not able to resolve the GCC exported symbols.
-            Solution:
-                Instead of exporting the symbols out of GCC, we will make GCC out a .dll.a ,
-                this will take much efforts compared to dlltool but what can I do, the dlltool does not work.
-            */
-            // Import Static Library 
-            // sprintf(
-            //     sys_cmd, "   \033[1;33mdlltool \033[0m\033[3m-D\033[0m \033[1;32m%.*s.dll\033[0m \033[3m-l\033[0m \033[1;33m%.*s.dll.a\033[0m \033[3m2>$null\033[0m",
-            //     (size_t)(strrchr(output_path + 2, '.')) - (size_t)(output_path),
-            //     output_path,
-            //     (size_t)(strrchr(output_path + 2, '.')) - (size_t)(output_path),
-            //     output_path
-            // );
-            // printf(sys_cmd);
-            // putchar('\n');
-
-            // sprintf(
-            //     sys_cmd, "dlltool -D %.*s.dll -l %.*s.dll.a 2>$null",
-            //     (size_t)(strrchr(output_path + 2, '.')) - (size_t)(output_path),
-            //     output_path,
-            //     (size_t)(strrchr(output_path + 2, '.')) - (size_t)(output_path),
-            //     output_path
-            // );
-            // system(sys_cmd);
+            if (!shared_only || !(i % 3)) putchar('\n'); else putchar('\t');
 
             CONTINUE:
         }
+        
+        if (shared_only) putchar('\n');
+        
+        printf("\033[35m Shared Static Library\033[0m\n");
+        
+        // Shared Static Library
+        sprintf(
+            sys_cmd, " \033[45m \033[49;1;33m ar \033[3;34mrcs \033[0m\033[1;33m%.*s.a \033[32m%s\033[0m",
+            (size_t)(strrchr(output_path + 2, '.')) - (size_t)(output_path),
+            output_path,
+            shared_static_lib_input
+        );
+        printf(sys_cmd);
+        putchar('\n');
+
+        sprintf(
+            sys_cmd, "ar rcs %.*s.a %s",
+            (size_t)(strrchr(output_path + 2, '.')) - (size_t)(output_path),
+            output_path,
+            shared_static_lib_input
+        );
+        system(sys_cmd);
+
+        
+        // Shared Dynamic Library
+        
+        printf("\033[35m Shared Dynamic Library\033[0m\n");
+        sprintf(
+            sys_cmd, " \033[45m \033[49;1;33m gcc \033[1;32m%s\n  \033[3;34m" LIBS__os_shared_object_flag "\033[0m\033[3m-o \033[0m\033[1;33m%.*s" LIBS__os_shared_object_filetype "%c  \033[22;3;36m%s\033[0m",
+            shared_static_lib_input,
+            #ifdef _WIN32
+            (size_t)(strrchr(output_path + 2, '.')) - (size_t)(output_path),
+            output_path,
+            #endif
+            (size_t)(strrchr(output_path + 2, '.')) - (size_t)(output_path),
+            output_path,
+            gcc ? '\n' : ' ',
+            gcc_string
+        );
+        printf(sys_cmd);
+        putchar('\n');
+        
+        sprintf(
+            sys_cmd, "gcc %s" LIBS__os_shared_object_flag "-o %.*s" LIBS__os_shared_object_filetype " %s",
+            shared_lib_input,
+            #ifdef _WIN32
+            (size_t)(strrchr(output_path + 2, '.')) - (size_t)(output_path),
+            output_path,
+            #endif
+            (size_t)(strrchr(output_path + 2, '.')) - (size_t)(output_path),
+            output_path,
+            gcc_string
+        );
+        system(sys_cmd);
+
     }
 
     return 0;

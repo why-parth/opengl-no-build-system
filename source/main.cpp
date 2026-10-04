@@ -1,6 +1,9 @@
 #include "include/glh/window.hpp"
 #include "include/glh/shader.hpp"
 #include "include/glh/buffer.hpp"
+#include "include/ft/ft2build.h"
+#include FT_FREETYPE_H
+
 
 // Debug
 
@@ -31,6 +34,9 @@ std::vector<VD_t> texture = {
 
 
 int main (void) {
+
+    FT_Library ft;
+    FT_Init_FreeType(&ft);
 
     // Window
 

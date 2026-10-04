@@ -530,7 +530,9 @@ However, unlike normal symbol resolution, the implementation of GLAD does not co
 <div align="center">
 
 OS Calls : `GLFW`
+
 Interface : `GLAD`
+
 Implementation : `Some_Driver_Process()`
 
 </div>
@@ -561,6 +563,7 @@ From now onwards, we are also going to be discussig these of the core OpenGL top
 <br>
 
 Then, finally the topic that I am currently figuring out : _Text Rendering_
+
 **[** _For future me, Date and Time of when I have resolved the Text Rendering : ?_ **]**
 
 _The problem with Text Rendering is that its library (for Windows) is compiled using MSVC, and I am using GCC to compile my code, thus the symbols can not be resolved due to incompatible ABIs. The solution is to re-compile the library using the original C source code._
