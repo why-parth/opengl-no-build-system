@@ -3,9 +3,22 @@
 
 #include "include/glh/base.hpp"
 
-typedef GLfloat VD_t;
+template <typename _Type>
+class BufferData {
 
-// Revert the changes and make the VertexData and IndexData classes seperate, Aeay from the BindableBuffer Class.
+    _Type * buffer;
+    std::vector<_Type> static_buffer;
+
+    GLuint buffer_type = 0;
+    GLsizeiptr buffer_size;
+    GLuint buffer_type_bytesize = sizeof(_Type);
+    GLuint stride = 0;
+
+    BufferData(void);
+
+};
+
+typedef GLfloat VD_t;
 
 class VertexData {
 
@@ -13,16 +26,19 @@ class VertexData {
 
     static GLuint Usage;
     GLuint id;
+
     VD_t * buffer;
     std::vector<VD_t> static_buffer;
-    GLuint type_byte_size = sizeof(VD_t);
-    GLsizeiptr buffer_size;
+
     GLuint buffer_type = 0;
+    GLsizeiptr buffer_size;
+    GLuint buffer_type_bytesize = sizeof(VD_t);
     GLuint stride = 0;
 
     void Constructor(void);
 
     VertexData(void);
+    VertexData(GLuint _ByteSize);
     VertexData(VD_t _Buffer[], GLuint _Count);
     VertexData(std::vector<VD_t> _Buffer);
     VertexData(std::initializer_list<VD_t> _Buffer);
@@ -30,12 +46,12 @@ class VertexData {
     void bind(void);
     void operator+ (void);
 
+    void data (GLuint _ByteSize);
     void data(VD_t _Buffer[], GLuint _Count);
     void data(std::vector<VD_t> _Buffer);
     void data(std::initializer_list<VD_t> _Buffer);
 
     VertexData &operator << (std::vector<VD_t> _Buffer);
-
     VertexData &operator | (GLuint _Usage);
     VertexData &operator % (GLuint _Stride);
 
@@ -47,15 +63,18 @@ class IndexData {
     static GLuint Usage;
     GLuint id;
     GLuint * buffer;
+
     std::vector<GLuint> static_buffer;
-    GLuint type_byte_size = sizeof(GLuint);
-    GLsizeiptr buffer_size;
+
     GLuint buffer_type = 0;
+    GLsizeiptr buffer_size;
+    GLuint buffer_type_bytesize = sizeof(GLuint);
     GLuint stride = 0;
 
     void Constructor(void);
 
     IndexData(void);
+    IndexData(GLuint _ByteSize);
     IndexData(GLuint _Buffer[], GLuint _Count);
     IndexData(std::vector<GLuint> _Buffer);
     IndexData(std::initializer_list<GLuint> _Buffer);
@@ -63,6 +82,7 @@ class IndexData {
     void bind(void);
     void operator+ (void);
 
+    void data (GLuint _ByteSize);
     void data(GLuint _Buffer[], GLuint _Count);
     void data(std::vector<GLuint> _Buffer);
     void data(std::initializer_list<GLuint> _Buffer);
@@ -74,10 +94,18 @@ class IndexData {
 
 };
 
+struct _Char_t {
+    unsigned int texture;
+    glm::vec2 size;
+    glm::vec2 bearing;
+    long int advance;
+};
+
 class TextureData {
 
     public:
     int __log__ = 1;
+    int _assigned = 0;
 
     GLuint id;
     GLubyte * _buffer;
@@ -85,11 +113,16 @@ class TextureData {
     GLint _height;
     GLint _n_channels;
 
+    GLint _is_font = 0;
+    GLint dont_free = 0;
+    std::map<char, _Char_t> Chars;
+
     static GLuint GeneralActive;
     GLuint _active = 0;
 
     TextureData(void);
     TextureData(const char * _Path);
+
 
     void bind(void);
     void operator+ (void);
@@ -100,7 +133,9 @@ class TextureData {
     static void ResetParameters(void);
 
     TextureData &load(const char * _Path);
+    TextureData &font(const char * _Path);
     TextureData &operator << (const char * _Path);
+
 
     TextureData active (GLuint _Active);
     TextureData &operator >> (GLuint _Active);

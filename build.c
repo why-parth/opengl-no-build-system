@@ -20,15 +20,19 @@ config {
     copy ".\\library\\ft\\libft.dll";
     copy ".\\source\\shader.vertex.glsl";
     copy ".\\source\\shader.fragment.glsl";
+    copy ".\\source\\text.vertex.glsl";
+    copy ".\\source\\text.fragment.glsl";
     copy ".\\textures\\Bricks\\Bricks_Color.jpg";
     copy ".\\textures\\Wood\\Wood_Color.jpg";
+    copy ".\\fonts\\Arial.ttf";
+    copy ".\\fonts\\EBGaramond.ttf";
+    copy ".\\fonts\\Montserrat.ttf";
     paste ".\\build";
     
     /* Input Files */
     in ".\\source\\main.cpp";
     in ".\\source\\gl.c";
     in ".\\source\\window.cpp";
-    in ".\\source\\draw.cpp";
     in ".\\source\\shader.cpp";
     in ".\\source\\buffer.cpp";
 

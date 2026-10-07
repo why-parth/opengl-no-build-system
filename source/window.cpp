@@ -9,9 +9,10 @@ Window::Window (unsigned int width, unsigned int height, char * title) {
     if (!glfwInitialized) {
         glfwInitialized = 1;
         if (!glfwInit()) {
-            ERR "GLFW could not be initialized!";
+            ERR COLr "Fatal" COLnone " error occured while initializing GLFW!";
             exit(-1);
         }
+
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
@@ -100,13 +101,13 @@ void Window::color(double _Red, double _Green, double _Blue)
 void Window::color(double _Red, double _Green, double _Blue, double _Alpha)
     { this->back.r = _Red; this->back.g = _Green;  this->back.b =_Blue; this->back.a = _Alpha; }
 
-void Window::fore_color(double _GrayValue)
+void Window::draw_color(double _GrayValue)
     { this->fore.r = this->fore.g = this->fore.b =_GrayValue, this->fore.a = 1.0f; }
-void Window::fore_color(double _GrayValue, double _Alpha)
+void Window::draw_color(double _GrayValue, double _Alpha)
     { this->fore.r = this->fore.g = this->fore.b = _GrayValue, this->fore.a = _Alpha; }
-void Window::fore_color(double _Red, double _Green, double _Blue)
+void Window::draw_color(double _Red, double _Green, double _Blue)
     { this->fore.r = _Red; this->fore.g = _Green;  this->fore.b =_Blue; this->fore.a = 1.0f; }
-void Window::fore_color(double _Red, double _Green, double _Blue, double _Alpha)
+void Window::draw_color(double _Red, double _Green, double _Blue, double _Alpha)
     { this->fore.r = _Red; this->fore.g = _Green;  this->fore.b =_Blue; this->fore.a = _Alpha; }
 
 void Window::fill(double _GrayValue)
@@ -119,9 +120,9 @@ void Window::fill(double _Red, double _Green, double _Blue, double _Alpha)
     { glClearColor(_Red/255.0f, _Green/255.0f, _Blue/255.0f, _Alpha); }
 
 void Window::fill(void) {
-    Color clearColor = this->back;
+    glm::vec4 clearColor = this->back;
     glClearColor(clearColor.r/255.0f, clearColor.g/255.0f, clearColor.b/255.0f, clearColor.a);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 

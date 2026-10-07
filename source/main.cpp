@@ -1,8 +1,7 @@
 #include "include/glh/window.hpp"
 #include "include/glh/shader.hpp"
 #include "include/glh/buffer.hpp"
-#include "include/ft/ft2build.h"
-#include FT_FREETYPE_H
+
 
 
 // Debug
@@ -13,17 +12,25 @@ int __log__ = 1;
 
 std::vector<VD_t> tri = {
 
-     0.4,  0.4,  1.0, 0.0, 0.0, 1.0, 1.0,
-    -0.4,  0.4,  1.0, 1.0, 0.0, 0.0, 1.0,
-    -0.4, -0.4,  0.0, 1.0, 0.0, 0.0, 0.0,
-     0.4, -0.4,  0.0, 0.0, 1.0, 1.0, 0.0
+     0.4f,  0.4f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, 
+    -0.4f,  0.4f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f, 
+    -0.4f, -0.4f,   0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 
+     0.4f, -0.4f,   0.0f, 0.0f, 1.0f,   1.0f, 0.0f, 
+
+     1.0f,  1.0f,   1.0f, 0.0f, 0.0f,   0.0f, 0.0f,
+    -1.0f,  1.0f,   1.0f, 0.0f, 0.0f,   0.0f, 0.0f,
+    -1.0f, -1.0f,   1.0f, 0.0f, 0.0f,   0.0f, 0.0f,
+     1.0f, -1.0f,   1.0f, 0.0f, 0.0f,   0.0f, 0.0f
 
 };
 
 std::vector<GLuint> ind = {
     0, 1, 2,
-    0, 3, 2
+    0, 3, 2,
+    4, 5, 6,
+    4, 7, 6
 };
+
 
 std::vector<VD_t> texture = {
     1.0, 1.0,
@@ -34,27 +41,19 @@ std::vector<VD_t> texture = {
 
 
 int main (void) {
-
-    FT_Library ft;
-    FT_Init_FreeType(&ft);
-
-    // Window
-
+    // Window  //----\---------------/-----\--------------------------/------------ ---  --    -
     Window(win);
 
-    // Shader Setup
+    // Shader Setup //------\----------/----------------\-------------------/------------ ---  --    -
+    Shader vrt(".\\shader.vertex.glsl"); vrt % "vertex";
+    Shader frg(".\\shader.fragment.glsl"); frg % "fragment";
+    Program program; program << vrt << frg;
+    
+    Shader text_vrt(".\\text.vertex.glsl"); text_vrt % "vertex";
+    Shader text_frg(".\\text.fragment.glsl"); text_frg % "fragment";
+    Program textRenderer; textRenderer << text_vrt << text_frg << win;
 
-    Shader vrt(".\\shader.vertex.glsl");
-    vrt % "vertex";
-
-    Shader frg(".\\shader.fragment.glsl");
-    frg % "fragment";
-
-    Program program;
-    program << vrt << frg;
-
-    // Buffer Setup
-
+    // Buffer Setup //-----------\----------/-----------\-------------/--------\-------------------/--- ---  --    -
     VertexData VBO;
     VBO << tri;
     VBO % 7;
@@ -73,9 +72,10 @@ int main (void) {
     
     IndexData EBO;
     EBO << ind;
+    EBO % 3;
 
     // VAO setup
-    
+
     AttributeData VAO;
 
     VAO(VBO, 7);
@@ -98,7 +98,24 @@ int main (void) {
 
     GLuint uniform_mp = program.locateUniform("mp");
 
+    // Font 
+
+    TextureData Arial;
+    Arial >> 4;
+    Arial.font("Arial.ttf");
+
+    TextureData EBGaramond;
+    EBGaramond >> 5;
+    EBGaramond.font("EBGaramond.ttf");
+
+    TextureData Montserrat;
+    Montserrat >> 5;
+    Montserrat.font("Montserrat.ttf");
+
+    textRenderer.font(Montserrat);
+
     // Frame Loop
+
 
     win frame {
 
@@ -112,7 +129,21 @@ int main (void) {
         transform = glm::rotate(transform, glm::sin(t), glm::vec3(0.0, 0.0, 1.0)); // Rotation;
         program.setUniform(transform);
 
+        program == "trace";
+        program.setUniform((glm::cos(2*t) + glm::sin(3*t))/10);
+
+        program == "mode";
+        program.setUniform(1);
         VAO.drawIndex(0, 2);
+
+        program.setUniform(0);
+        VAO.drawIndex(0, 2);
+
+        textRenderer.font(Montserrat);
+        textRenderer.text("This text is moving!", 100 + glm::cos(2*t) * 50, 100 + glm::sin(4*t) * 10, 0.5f, glm::vec3(250, 200, 150));
+        
+        textRenderer.font(EBGaramond);
+        textRenderer.text("OpenGL", 50, 600, 1.0f, glm::vec3(win.fore));
 
     };
 

@@ -1,7 +1,8 @@
 #ifndef GLH_Shader_Header
 #define GLH_Shader_Header
 
-#include "include/glh/base.hpp"
+#include "include/glh/buffer.hpp"
+#include "include/glh/window.hpp"
 
 class FileString {
 
@@ -62,10 +63,18 @@ class Program {
     static int RecentLinkStatus;
     GLint RecentUniformLocation;
 
+    AttributeData VAO;
+    VertexData VBO;
+    GLint _texture_assigned = 0;
+    TextureData FontTexture; // Assignable
+
+    Window * window;
+
     Program(void);
 
     Program& operator < (Shader &_Shader);
     Program& operator << (Shader &_Shader);
+    Program& operator << (Window &_Window);
 
     void use(void);
 
@@ -95,7 +104,9 @@ class Program {
     void operator<<(std::initializer_list<GLfloat> _Vector);
     void operator<<(std::initializer_list<GLdouble> _Vector);
 
-    
+    void text(const char *, GLfloat _X, GLfloat _Y, float _Scale, glm::vec3 _Color);
+
+    void font(TextureData & _Font);
 
 };
 

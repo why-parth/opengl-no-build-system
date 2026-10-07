@@ -123,11 +123,11 @@ for (                                               \
 #endif
 
 #ifndef input_files
-#define input_files     10
+#define input_files     24
 #endif
 
 #ifndef copy_files_count
-#define copy_files_count     10
+#define copy_files_count     24
 #endif
 
 #ifndef output_name_length

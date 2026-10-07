@@ -4,19 +4,25 @@
 
 GLuint VertexData::Usage = GL_STATIC_DRAW;
 
+void VertexData::data (GLuint _ByteSize) {
+    this->buffer_size = _ByteSize;
+    glBindBuffer(this->buffer_type, this->id);
+    glBufferData(this->buffer_type, _ByteSize, NULL, VertexData::Usage);
+}
+
 void VertexData::data (std::initializer_list<VD_t> _Buffer) {
     this->static_buffer = _Buffer;
     this->buffer = this->static_buffer.data();
     this->buffer_size = _Buffer.size();
     glBindBuffer(this->buffer_type, this->id);
-    glBufferData(this->buffer_type, this->type_byte_size * _Buffer.size(), this->buffer, VertexData::Usage);
+    glBufferData(this->buffer_type, this->buffer_type_bytesize * _Buffer.size(), this->buffer, VertexData::Usage);
 }
 
 void VertexData::data (VD_t _Buffer[], GLuint _Count) {
     this->buffer = _Buffer;
     this->buffer_size = _Count;
     glBindBuffer(GL_ARRAY_BUFFER, this->id);
-    glBufferData(this->buffer_type, this->type_byte_size * _Count, _Buffer, VertexData::Usage);
+    glBufferData(this->buffer_type, this->buffer_type_bytesize * _Count, _Buffer, VertexData::Usage);
 }
 
 void VertexData::data (std::vector<VD_t> _Buffer) {
@@ -24,7 +30,7 @@ void VertexData::data (std::vector<VD_t> _Buffer) {
     this->static_buffer = std::vector<VD_t>(_Buffer);
     this->buffer_size = _Buffer.size();
     glBindBuffer(this->buffer_type, this->id);
-    glBufferData(this->buffer_type, this->type_byte_size * _Buffer.size(), _Buffer.data(), VertexData::Usage);
+    glBufferData(this->buffer_type, this->buffer_type_bytesize * _Buffer.size(), _Buffer.data(), VertexData::Usage);
 }
 
 void VertexData::bind(void) {
@@ -49,12 +55,19 @@ VertexData::VertexData(void) {
     this->Constructor();
 }
 
+VertexData::VertexData(GLuint _ByteSize) {
+    this->Constructor();
+    this->data(_ByteSize);
+}
+
 VertexData::VertexData(VD_t _Buffer[], GLuint _Count) {
     this->Constructor();
+    this->data(_Buffer, _Count);
 }
 
 VertexData::VertexData(std::vector<VD_t> _Buffer) {
     this->Constructor();
+    this->data(_Buffer);
 }
 
 VertexData::VertexData(std::initializer_list<VD_t> _Buffer) {
@@ -75,19 +88,25 @@ VertexData &VertexData::operator% (GLuint _Stride) {
 
 GLuint IndexData::Usage = GL_STATIC_DRAW;
 
+void IndexData::data (GLuint _ByteSize) {
+    this->buffer_size = _ByteSize;
+    glBindBuffer(this->buffer_type, this->id);
+    glBufferData(this->buffer_type, _ByteSize, NULL, VertexData::Usage);
+}
+
 void IndexData::data (std::initializer_list<GLuint> _Buffer) {
     this->static_buffer = _Buffer;
     this->buffer = this->static_buffer.data();
     this->buffer_size = _Buffer.size();
     glBindBuffer(this->buffer_type, this->id);
-    glBufferData(this->buffer_type, this->type_byte_size * _Buffer.size(), this->buffer, IndexData::Usage);
+    glBufferData(this->buffer_type, this->buffer_type_bytesize * _Buffer.size(), this->buffer, IndexData::Usage);
 }
 
 void IndexData::data (GLuint _Buffer[], GLuint _Count) {
     this->buffer = _Buffer;
     this->buffer_size = _Count;
     glBindBuffer(this->buffer_type, this->id);
-    glBufferData(this->buffer_type, this->type_byte_size * _Count, _Buffer, IndexData::Usage);
+    glBufferData(this->buffer_type, this->buffer_type_bytesize * _Count, _Buffer, IndexData::Usage);
 }
 
 void IndexData::data (std::vector<GLuint> _Buffer) {
@@ -95,7 +114,7 @@ void IndexData::data (std::vector<GLuint> _Buffer) {
     this->static_buffer = std::vector<GLuint>(_Buffer);
     this->buffer_size = _Buffer.size();
     glBindBuffer(this->buffer_type, this->id);
-    glBufferData(this->buffer_type, this->type_byte_size * _Buffer.size(), _Buffer.data(), IndexData::Usage);
+    glBufferData(this->buffer_type, this->buffer_type_bytesize * _Buffer.size(), _Buffer.data(), IndexData::Usage);
 }
 
 void IndexData::bind(void) {
@@ -118,6 +137,11 @@ void IndexData::Constructor (void) {
 IndexData::IndexData(void) {
     this->Constructor();
     glGenBuffers(1, &this->id);
+}
+
+IndexData::IndexData(GLuint _ByteSize) {
+    this->Constructor();
+    this->data(_ByteSize);
 }
 
 IndexData::IndexData(GLuint _Buffer[], GLuint _Count) {
@@ -156,7 +180,9 @@ TextureData::TextureData(const char * _Path) {
     TextureData::ResetParameters();
     this->_active = TextureData::GeneralActive++;
     glGenTextures(1, &this->id);
-    this->load(_Path);
+    char * _Ext = (char *) std::strrchr(_Path, '.') + 1;
+    if (!strcmp(_Ext, "ttf") || !strcmp(_Ext, "TTF")) this->font(_Path);
+    else this->load(_Path);
 }
 
 void TextureData::bind(void) {
@@ -165,9 +191,12 @@ void TextureData::bind(void) {
 }
 
 void TextureData::init(void) {
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->_wdith, this->_height, 0, GL_RGB, GL_UNSIGNED_BYTE, this->_buffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, this->_is_font ? GL_RED : GL_RGB, this->_wdith, this->_height, 0, this->_is_font ? GL_RED : GL_RGB, GL_UNSIGNED_BYTE, this->_buffer);
     glGenerateMipmap(GL_TEXTURE_2D);
-    stbi_image_free(this->_buffer);
+    if (!this->dont_free) {
+        stbi_image_free(this->_buffer);
+        this->dont_free = 1;
+    }
 }
 
 void TextureData::make(void) {
@@ -196,23 +225,95 @@ TextureData &TextureData::load(const char * _Path) {
         ERR "Texture '" COLy << _Path << COLnone "' could not be loaded!";
         exit(-1);
     }
+    this->_assigned = 1;
+    return *this;
+}
+
+TextureData &TextureData::font(const char * _Path) {
+    this->_is_font = 1;
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    FT_Library _FT;
+
+    if (FT_Init_FreeType(&_FT)) {
+        ERR COLr "Fatal" COLnone " error occured while initializing FreeType library!";
+        exit(-1);
+    }
+
+    FT_Face _Face;
+    if (FT_New_Face(_FT, _Path, 0, &_Face)) {
+        ERR "Font '" COLy << _Path << COLnone "' could not be loaded!";
+        exit(-1);
+    }
+
+    FT_Set_Pixel_Sizes(_Face, 0, 48);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    this->dont_free = 1;
+
+    glDeleteTextures(1, &this->id);
+
+    for ( unsigned char c = 0; c < 128; c++)  {
+
+        if (FT_Load_Char(_Face, c, FT_LOAD_RENDER)) {
+            ERR "Glyph '" COLy << c << COLnone "' could not be loaded!";
+            exit(-1);
+        }   
+
+        this->_wdith = _Face->glyph->bitmap.width;
+        this->_height = _Face->glyph->bitmap.rows;
+        this->_buffer = _Face->glyph->bitmap.buffer;
+
+        glGenTextures(1, &this->id);
+        this->bind();
+        
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        this->init();
+
+        _Char_t _Char = {
+            this->id,
+            glm::ivec2(this->_wdith, this->_height),
+            glm::ivec2(_Face->glyph->bitmap_left, _Face->glyph->bitmap_top),
+            _Face->glyph->advance.x
+        };
+
+        this->Chars.insert(std::pair<char, _Char_t>(c, _Char));
+
+    }
+
+    this->_buffer = NULL;
+    FT_Done_Face(_Face);
+    FT_Done_FreeType(_FT);
+    LOGi "Font '" COLy << _Path << COLnone "' loaded." ALLnone;
+    TextureData::ResetParameters();
+    this->_assigned = 1;
     return *this;
 }
 
 TextureData &TextureData::operator << (const char * _Path) {
-    this->load(_Path);
+    char * _Ext = (char *) std::strrchr(_Path, '.') + 1;
+
+    if (!strcmp(_Ext, "ttf") || !strcmp(_Ext, "TTF")) this->font(_Path);
+    else this->load(_Path);
+    
     return *this;
 }
 
 TextureData TextureData::active (GLuint _Active) {
     this->_active = _Active;
-    this->make();
+    if (this->_assigned) this->make();
     return *this;
 }
 
 TextureData &TextureData::operator >> (GLuint _Active) {
     this->_active = _Active;
-    this->make();
+    if (this->_assigned) this->make();
     return *this;
 }
 
@@ -281,7 +382,9 @@ AttributeData &AttributeData::attribute(VertexData _VertexData) {
         if (_VertexData.id == _vbo_id_stride_offset[i]) {
             if (!(_stride = _VertexData.stride)) _stride = _vbo_id_stride_offset[i+1];
             _offset = _vbo_id_stride_offset[i+2];
+            break;
         }
+
     }
     glBindVertexArray(this->id);
     glBindBuffer(GL_ARRAY_BUFFER, _VertexData.id);
@@ -345,9 +448,11 @@ void AttributeData::drawIndex(void) {
 void AttributeData::drawVertex(GLuint _Start, GLuint _Count) {
     glBindVertexArray(this->id);
     glDrawArrays(this->DrawMode, _Start, _Count);
+    glBindVertexArray(0);
 }
 
 void AttributeData::drawIndex(GLuint _Start, GLuint _Count) {
     glBindVertexArray(this->id);
     glDrawElements(this->DrawMode, _Count * this->index_stride, GL_UNSIGNED_INT, (void *) (_Start * this->index_stride * sizeof(GLuint)));
+    glBindVertexArray(0);
 }

@@ -100,6 +100,7 @@ H ---> D
 
 
 ```
+
 </div>
 
 <br>
@@ -469,9 +470,6 @@ Since COLL is a C framework that integrates with C, we can use `libs` and `syste
 
 <br>
 
-
-
-
 <u><i><div align="right">3rd October 2026</div></i></u>
 
 _"I did not append the repository for quite a while because I was indulged in learning the core of OpenGL, which I belive I have learnt. (i guess)"_
@@ -564,13 +562,186 @@ From now onwards, we are also going to be discussig these of the core OpenGL top
 
 Then, finally the topic that I am currently figuring out : _Text Rendering_
 
-**[** _For future me, Date and Time of when I have resolved the Text Rendering : ?_ **]**
+**[** _For future me, Date and Time of when I have resolved the Text Rendering : `05:46`, `10/6/2026`!_ **]**
 
 _The problem with Text Rendering is that its library (for Windows) is compiled using MSVC, and I am using GCC to compile my code, thus the symbols can not be resolved due to incompatible ABIs. The solution is to re-compile the library using the original C source code._
 
 _I have already prepared a utility `libs.exe` for such times, but I will need to upgrade it to be able to compile multiple C source files at once._
 
+<br>
 
+<u><i><div align="right">6th October 2026</div></i></u>
+
+_"Text Rendering is completed, now finally I can proceed to make a game. It did not take a while, thanks to the wonderful explaination by `learnopengl.com`."_
+
+<div align="center">
+
+![An example of how the build system looks.](./.ignoreReadmeData/initialized.png)
+
+</div>
+
+- A rotating wooden texture whose brightess is proportional to how close cursor is.
+- An example of color interpolation.
+- A static text.
+- A dynamic text.
+
+
+
+<br>
+
+#### OpenGL as a Context Machine
+
+**What is a Context Machine**
+OpenGL functions in this pattern: 
+
+<div align="center">
+
+Definition : `Make things that the GPU can operate on.`
+
+then
+
+Switching : `Tell the GPU when operate on what data.`
+
+</div>
+
+<br>
+
+The reason why its called switching can be understood like this, suppose that you wanna add two numbers on GPU. Normally, you would use this:
+
+```
+int add(int a, int b) {
+    return a + b;
+}
+```
+then,
+```
+sum = add(a, b);
+```
+
+<br>
+
+But OpenGL utilises the GPU as:
+
+```
+void gpu_add(void) {
+    * sum_ptr = * n1 + * n2;
+}
+```
+
+<br>
+
+OpenGL makes the GPU `point-to` the memory before the actual process begins. So for adding `a` and `b`, we would need to set:
+```
+sum_ptr = &sum;
+n1 = &a;
+n2 = &b;
+// And then call gpu_add(...) to execute the task.
+gpu_add
+```
+This setting of pointers is what a _context_ is. A context is any configuration of such pointers that define what the GPU will end up doing.
+
+The GPU only knows how to read pointers to know what to do and to know what to work with. This styling lets the GPU be 100% aware of what is hapenning.
+
+<br>
+
+
+**Maintainance of IDs**
+When you request OpenGL to generate an _object_, OpenGL creates an empty structure (prototype of the object) and assigns it a unique number called ID. OpenGL uses that ID to locate that object when needed.
+> The term 'object' is a general term representing all the things that OpenGL allows us to create (structures, arrays, context, programs, etc.).
+
+This generation is just _declaration_, OpenGL only allocates enough space to be able to completely define that object. It does NOT define anything apart from the ID.
+
+OpenGL is merely a specification, but it makes it mendatory for all implementations to keep track of the IDs. But the user can also keep track of the IDs and orient them as per their need.
+
+<br>
+
+**Generation**
+In OpenGL, functions starting with `glGen`- are used to generate objects (allocate a chunck in the memory). It is similar to libc's `malloc`, just like how `malloc` returns the pointer to the block of memory, `glGen` functions also output an _id_. If we don't store the return values of `malloc` or of `glGen-`, we wont be able to ever access the allocated blocks of memory.
+
+`Array Buffer` (or `Buffer` for short) is a basic OpenGL object that is nothing but an array that OpenGL knows of. It can be generated via the function `glGenBuffers`. It outputs an ID, but not in the standard fashion:
+
+<div align="center">
+
+`int id = glGenBuffers();`
+
+This will NOT work!
+
+</div>
+
+<br>
+
+Instead of returning the ID, You must pass it an address where it can store the ID.
+
+```
+int id;
+glGenBuffers(1, &id);
+```
+
+`glGenBuffers(_count, _pointers)` is used to generate `_count` number of `Buffers`s and store thier _ID_(s) sequentially in the array-of (pointer-to) `int`(s). OpenGL maintains a record of all the generated _ID_(s) along with their corresponding values. Such as, a `Buffer` will always have a `Size` attatched to it.
+> You can get the size of the buffer using glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &size); This will return the buffer size of the currently binded array buffer.
+
+<br>
+
+**Binding**
+When you use a `glGen-` function, you order OpenGL _"I want this object."_, but OpenGL doesn't do anything past its creation.
+
+If you wish to work with an object, you must tell OpenGL _"I am working with this object now."_. And for this you MUST have the ID of the object so that OpenGL can point to it.
+
+<div align="center">
+
+`glBindBuffer(GL_ARRAY_BUFFER, id);`
+
+this means
+
+_"OpenGL, I am working with a `GL_ARRAY_BUFFER` that has the ID `id`."_
+
+</div>
+
+<br>
+
+If you wish to work with an object (lets say, a `Buffer`) you must use a `glBind-` function to set that object as active, then, all the changes you make will happen to that active object. Before making the changes you must set the object as active. This is called _binding_.
+
+
+To set the data of a `Buffer` we use the function `glBufferData`,
+
+<div align="center">
+
+`glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW);`
+
+this means
+
+_"OpenGL, set the given data (`data`) to the currently binded `GL_ARRAY_BUFFER`; And also know that its a static data that I will be uisng for drawing (`GL_STATIC_DRAW`)."_
+
+</div>
+
+<br>
+
+```C
+/* Creating 3 buffers. */
+
+// OpenGL will create the buffers and output an ID for each, we need to store those IDs somewhere.
+unsigned int buffer_1, buffer_2, buffer_3; 
+// Creating 3 buffers using OpenGL.
+glGenBuffers(1, &buffer_1);
+glGenBuffers(1, &buffer_2);
+glGenBuffers(1, &buffer_3);
+
+/* Setting data in buffer_1 and buffer_2 */
+
+// Creating the data that we want to store in the buffers.
+float vertex_data_1 = { 1.0f, 1.0f, 1.0f, 0.0f };
+float vertex_data_2 = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+// Storing vertex_data_1 in the buffer_1
+glBindBuffer(GL_ARRAY_BUFFER, buffer_1);
+glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data_1), vertex_data_1, GL_STATIC_DRAW);
+
+// Storing vertex_data_1 in the buffer_2
+glBindBuffer(GL_ARRAY_BUFFER, buffer_2);
+glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data_2), vertex_data_2, GL_STATIC_DRAW);
+
+/* buffer_3 remains empty. */
+```
 
 
 

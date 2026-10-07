@@ -14,8 +14,6 @@ FileString::FileString (const char * _FilePath) {
         exit(-1);
     }
 
-    
-
     else {
         this->source = new char[BufferSize];
         long long int i = 0;
@@ -65,6 +63,7 @@ void Shader::create (void) {
         std::cout << InfoLog;
         exit(-1);
     }
+
 }
 
 void Shader::operator << (const char * _Code) {
@@ -97,6 +96,17 @@ int Program::RecentLinkStatus = 0;
 
 Program::Program(void) {
     this->id = glCreateProgram();
+
+    // Setup the VAO and VBO, then the text will render.
+
+    this->VAO.bind();
+    this->VBO.bind();
+    this->VBO.data(sizeof(GLfloat) * 6 * 4);
+    this->VAO.location(0);
+    this->VAO.count(4);
+    this->VAO.stride(VBO, 4);
+    this->VAO.attribute(VBO);
+
 }
 
 Program& Program::operator < (Shader &_Shader) {
@@ -116,7 +126,7 @@ Program& Program::operator < (Shader &_Shader) {
             exit(-1);
         }
 
-        LOGi "Shader Program linked." COLnone;
+        LOGi "Shader Program linked." ALLnone;
 
         glUseProgram(this->id);
     }
@@ -128,6 +138,11 @@ Program& Program::operator << (Shader &_Shader) {
     Program & ret = this->operator<(_Shader);
     _Shader.free();
     return ret;
+}
+
+Program& Program::operator << (Window &_Window) {
+    this->window = &_Window;
+    return *this;
 }
 
 void Program::use(void) {
@@ -268,4 +283,62 @@ void Program::operator<<(std::initializer_list<GLdouble> _Vector){
     }
 }
 
+void Program::text(const char * _Text, GLfloat _X, GLfloat _Y, float _Scale, glm::vec3 _Color) {
+
+    this->use();
+    this->locateUniform("projection");
+    glm::mat4 textProjection = glm::ortho(0.0f, (GLfloat)this->window->width, 0.0f, (GLfloat)this->window->height);
+    this->setUniform(textProjection);
+
+    this->locateUniform("texColor");
+    this->setUniform(_Color.r/255, _Color.g/255, _Color.b/255);
+
+    this->locateUniform("aTexture");
+    this->setUniform((GLint)this->FontTexture._active);
+
+    this->FontTexture.bind();
+    this->VAO.bind();
+
+    for ( int i = 0, c; c = _Text[i]; i++ ) {
+        _Char_t _Char = FontTexture.Chars[c];
+
+        GLfloat xpos = _X + _Char.bearing.x * _Scale;
+        GLfloat ypos = _Y - (_Char.size.y - _Char.bearing.y) * _Scale;
+
+        GLfloat w = _Char.size.x * _Scale;
+        GLfloat h = _Char.size.y * _Scale;
+        
+        GLfloat verts[6][4] {
+            { xpos,     ypos + h,   0.0f, 0.0f},
+            { xpos,     ypos    ,   0.0f, 1.0f},
+            { xpos + w, ypos    ,   1.0f, 1.0f},
+            
+            { xpos,     ypos + h,   0.0f, 0.0f},
+            { xpos + w, ypos    ,   1.0f, 1.0f},
+            { xpos + w, ypos + h,   1.0f, 0.0f},
+        };
+
+
+        this->VBO.bind();
+        
+        glActiveTexture(GL_TEXTURE0 + this->FontTexture._active);
+        glBindTexture(GL_TEXTURE_2D, _Char.texture);
+
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(verts), verts);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        _X += (_Char.advance >> 6) * _Scale;
+        
+    }
+
+    glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void Program::font(TextureData & _Font) {
+    this->FontTexture = _Font;
+    this->_texture_assigned = 1;
+}
 
