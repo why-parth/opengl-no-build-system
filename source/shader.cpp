@@ -5,16 +5,16 @@ size_t FileString::BufferSize = 4096;
 FileString::FileString (void) {};
 FileString::FileString (const char * _FilePath) {
     FILE * _FilePtr = fopen(_FilePath, "r");
-
-    this->file_name = new char[sizeof(_FilePath) + 1];
-    std::sprintf(this->file_name, "%s", _FilePath);
     
     if (!_FilePtr) {
         ERR "File '" COLy << _FilePath << COLnone "' could not be opened for reading!\n";
         exit(-1);
     }
-
+    
     else {
+        this->file_name = new char[std::strlen(_FilePath) + 1];
+        std::sprintf(this->file_name, "%s", _FilePath);
+
         this->source = new char[BufferSize];
         long long int i = 0;
         for (char c = (long long int)fgetc(_FilePtr); !c || c != EOF; c = fgetc(_FilePtr), i++){
@@ -33,8 +33,10 @@ FileString::FileString (const char * _FilePath) {
 
 void FileString::free(void) {
     if (this->static_source) return;
+    if (this->source)
     delete[] this->source;
     this->source = nullptr;
+    if (this->file_name)
     delete[] this->file_name;
     this->file_name = nullptr;
 }
@@ -48,22 +50,23 @@ char Shader::InfoLog[4096] = "\0";
 int Shader::RecentCompilationStatus = 0;
 
 Shader::Shader (void) {}
+
 Shader::Shader (const char * _FileName) : FileString(_FileName) {}
 
 void Shader::create (void) {
+
     this->id = glCreateShader(this->shader_type);
 
     glShaderSource(this->id, 1, &this->source, NULL);
     glCompileShader(this->id);
     
-    glGetShaderiv(this->id, GL_COMPILE_STATUS, &RecentCompilationStatus);
-    if (!RecentCompilationStatus) {
-        glGetShaderInfoLog(this->id, 1024, NULL, InfoLog);
+    glGetShaderiv(this->id, GL_COMPILE_STATUS, &Shader::RecentCompilationStatus);
+    if (!Shader::RecentCompilationStatus) {
+        glGetShaderInfoLog(this->id, 1024, NULL, Shader::InfoLog);
         ERRb this->shader_type_string << " Shader" STYLEnone " could not be compiled\n";
-        std::cout << InfoLog;
+        std::cout << Shader::InfoLog;
         exit(-1);
     }
-
 }
 
 void Shader::operator << (const char * _Code) {
@@ -72,9 +75,6 @@ void Shader::operator << (const char * _Code) {
 }
 
 void Shader::operator % (const char * _ShaderType) {
-
-    this->shader_type;
-    std::sprintf(shader_type_string, "%s", _ShaderType);
 
     if (!strcmp(_ShaderType, "vertex")) this->shader_type = GL_VERTEX_SHADER;
     else if (!strcmp(_ShaderType, "fragment")) this->shader_type = GL_FRAGMENT_SHADER;
@@ -98,7 +98,7 @@ Program::Program(void) {
     this->id = glCreateProgram();
 
     // Setup the VAO and VBO, then the text will render.
-
+    
     this->VAO.bind();
     this->VBO.bind();
     this->VBO.data(sizeof(GLfloat) * 6 * 4);
@@ -111,13 +111,13 @@ Program::Program(void) {
 
 Program& Program::operator < (Shader &_Shader) {
     glAttachShader(this->id, _Shader.id);
-
+    
     if (_Shader.shader_type == GL_VERTEX_SHADER) this->vertex_shader_linked = 1;
     else if (_Shader.shader_type == GL_FRAGMENT_SHADER) this->fragment_shader_linked = 1;
-
+    
     if (this->vertex_shader_linked && this->fragment_shader_linked) {
         glLinkProgram(this->id);
-
+        
         glGetProgramiv(this->id, GL_LINK_STATUS, &Program::RecentLinkStatus);
         if (!Program::RecentLinkStatus) {
             glGetProgramInfoLog(this->id, 4096, NULL, Program::InfoLog);
@@ -341,4 +341,3 @@ void Program::font(TextureData & _Font) {
     this->FontTexture = _Font;
     this->_texture_assigned = 1;
 }
-

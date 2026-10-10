@@ -1,5 +1,5 @@
 #include "include/glh/window.hpp"
-#include "include/glh/shader.hpp"
+#include "include/glh/interactive.hpp"
 #include "include/glh/buffer.hpp"
 
 
@@ -40,18 +40,31 @@ std::vector<VD_t> texture = {
 };
 
 
+void FUNC (void) {
+    std::cout << "\nButton!";
+}
+
+
 int main (void) {
     // Window  //----\---------------/-----\--------------------------/------------ ---  --    -
     Window(win);
 
     // Shader Setup //------\----------/----------------\-------------------/------------ ---  --    -
+    int i = 1;
     Shader vrt(".\\shader.vertex.glsl"); vrt % "vertex";
     Shader frg(".\\shader.fragment.glsl"); frg % "fragment";
-    Program program; program << vrt << frg;
+    Program program;
+    program << vrt << frg << win;
+
+    Shader inter_vrt(".\\inter.vertex.glsl"); inter_vrt % "vertex";
+    Shader inter_frg(".\\inter.fragment.glsl"); inter_frg % "fragment";
+    Program inter_program;
+    inter_program << inter_vrt << inter_frg << win;
     
     Shader text_vrt(".\\text.vertex.glsl"); text_vrt % "vertex";
     Shader text_frg(".\\text.fragment.glsl"); text_frg % "fragment";
-    Program textRenderer; textRenderer << text_vrt << text_frg << win;
+    Program textRenderer;
+    textRenderer << text_vrt << text_frg << win;
 
     // Buffer Setup //-----------\----------/-----------\-------------/--------\-------------------/--- ---  --    -
     VertexData VBO;
@@ -116,6 +129,19 @@ int main (void) {
 
     // Frame Loop
 
+    // Interactive TR(inter_program, {1000, 800}, {150, 50}, glm::vec2{1, 1});
+
+    Interactive button(inter_program);
+
+    button.position = {0, 800};
+    button.size = {200, 50};
+    button.center = {0, 1};
+    button.active_press_function = FUNC;
+
+    PRESET_BUTTON_GENERIC(button);
+
+    button.init();
+
 
     win frame {
 
@@ -144,6 +170,8 @@ int main (void) {
         
         textRenderer.font(EBGaramond);
         textRenderer.text("OpenGL", 50, 600, 1.0f, glm::vec3(win.fore));
+
+        button.display();
 
     };
 

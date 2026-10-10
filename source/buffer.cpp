@@ -377,15 +377,25 @@ AttributeData &AttributeData::operator=(GLuint _Count) {
 AttributeData &AttributeData::attribute(VertexData _VertexData) {
     GLuint _stride;
     GLuint _offset;
+
+    int found = -1;
+
     int i = 0;
     for (; i < _vbo_id_stride_offset.size(); i += 3) {
         if (_VertexData.id == _vbo_id_stride_offset[i]) {
-            if (!(_stride = _VertexData.stride)) _stride = _vbo_id_stride_offset[i+1];
-            _offset = _vbo_id_stride_offset[i+2];
+            found = i;
             break;
         }
-
     }
+
+    if (found < 0) {
+        this->stride(_VertexData, 0);
+        found = i - 3;
+    }
+
+    _stride = _vbo_id_stride_offset[found + 1];
+    _offset = _vbo_id_stride_offset[found + 2];
+
     glBindVertexArray(this->id);
     glBindBuffer(GL_ARRAY_BUFFER, _VertexData.id);
     glVertexAttribPointer(
@@ -397,7 +407,7 @@ AttributeData &AttributeData::attribute(VertexData _VertexData) {
         (void *)( _offset * sizeof(GLfloat) )
     );
     glEnableVertexAttribArray(this->_location);
-    _vbo_id_stride_offset[i+2] += this->_count;
+    _vbo_id_stride_offset[found + 2] += this->_count;
     return *this;
 }
 

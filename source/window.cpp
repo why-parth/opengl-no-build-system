@@ -77,6 +77,14 @@ void Window::loop(std::function<void(Window& This)> _Code) {
         if (this->mouse_pos.y >= this->height) this->mouse_pos.y = this->height - 1;
         else if (this->mouse_pos.y < 0) this->mouse_pos.y = 0;
 
+        this->mouse_right == glfwGetMouseButton(this->object, GLFW_MOUSE_BUTTON_RIGHT);
+        if (this->mouse_right == GLFW_PRESS) this->mouse_right = 1;
+        else if (this->mouse_right == GLFW_RELEASE) this->mouse_right = 0;
+
+        this->mouse_left = glfwGetMouseButton(this->object, GLFW_MOUSE_BUTTON_LEFT);
+        if (this->mouse_left == GLFW_PRESS) this->mouse_left = 1;
+        else if (this->mouse_left == GLFW_RELEASE) this->mouse_left = 0;
+
         this->fill();
 
         _Code(*this);

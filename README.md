@@ -677,7 +677,7 @@ int id;
 glGenBuffers(1, &id);
 ```
 
-`glGenBuffers(_count, _pointers)` is used to generate `_count` number of `Buffers`s and store thier _ID_(s) sequentially in the array-of (pointer-to) `int`(s). OpenGL maintains a record of all the generated _ID_(s) along with their corresponding values. Such as, a `Buffer` will always have a `Size` attatched to it.
+`glGenBuffers(_count, _pointers)` is used to generate `_count` number of `Buffer`s and store thier _ID_(s) sequentially in the array-of (pointer-to) `int`(s). OpenGL maintains a record of all the generated _ID_(s) along with their corresponding values. Such as, a `Buffer` will always have a `Size` attatched to it.
 > You can get the size of the buffer using glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &size); This will return the buffer size of the currently binded array buffer.
 
 <br>

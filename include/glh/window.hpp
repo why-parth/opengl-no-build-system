@@ -33,6 +33,8 @@ class Window {
     GLint height;
     glm::dvec2 mouse_pos;
     glm::vec2 mouse_npos;
+    GLint mouse_right;
+    GLint mouse_left;
 
     glm::vec4 back = {28.0f, 34.0f, 32.0f, 1.0f} ;
     glm::vec4 fore = {255.0f, 255.0f, 255.0f, 1.0f} ;

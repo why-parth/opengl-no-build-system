@@ -18,15 +18,23 @@ config {
     /* Copy and Paste */
     copy ".\\library\\glfw\\glfw3.dll";
     copy ".\\library\\ft\\libft.dll";
+
     copy ".\\source\\shader.vertex.glsl";
     copy ".\\source\\shader.fragment.glsl";
+
     copy ".\\source\\text.vertex.glsl";
     copy ".\\source\\text.fragment.glsl";
+
+    copy ".\\source\\inter.vertex.glsl";
+    copy ".\\source\\inter.fragment.glsl";
+
     copy ".\\textures\\Bricks\\Bricks_Color.jpg";
     copy ".\\textures\\Wood\\Wood_Color.jpg";
+    
     copy ".\\fonts\\Arial.ttf";
     copy ".\\fonts\\EBGaramond.ttf";
     copy ".\\fonts\\Montserrat.ttf";
+
     paste ".\\build";
     
     /* Input Files */
@@ -35,6 +43,7 @@ config {
     in ".\\source\\window.cpp";
     in ".\\source\\shader.cpp";
     in ".\\source\\buffer.cpp";
+    in ".\\source\\interactive.cpp";
 
     /* Output Name */
     out "run";

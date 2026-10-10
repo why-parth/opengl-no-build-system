@@ -10,7 +10,7 @@ class FileString {
 
     public:
     char * file_name;
-    char * source;
+    char * source = NULL;
     static size_t BufferSize;
     int static_source = 0;
 
@@ -32,10 +32,10 @@ class Shader : public FileString {
     
     public:
     int __log__ = 1;
-    unsigned long int id;
+    GLuint id;
     static char InfoLog[4096];
     static int RecentCompilationStatus;
-    unsigned long int shader_type;
+    GLuint shader_type;
     char shader_type_string[32];
 
     Shader (void);
@@ -55,8 +55,8 @@ class Shader : public FileString {
 class Program {
 
     public:
-    int __log__ = 1; 
-    unsigned long int id;
+    int __log__ = 1;
+    GLuint id;
     int vertex_shader_linked = 0;
     int fragment_shader_linked = 0;
     static char InfoLog[4096];
