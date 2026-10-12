@@ -1,11 +1,10 @@
 #include "include/glh/window.hpp"
 
-
 int Window::glfwInitialized = 0;
 int Window::gladInitialized = 0;
 
 
-Window::Window (unsigned int width, unsigned int height, char * title) {
+Window::Window (unsigned int width, unsigned int height, const char * title) {
     if (!glfwInitialized) {
         glfwInitialized = 1;
         if (!glfwInit()) {
@@ -59,7 +58,13 @@ Window::~Window (void) {
 
 
 void Window::loop(std::function<void(Window& This)> _Code) {
+
+    GLdouble start_time, elapsed_time;
+    const double frame_duration = 1 / this->FPS;
+
     while (!exit_window) {
+        start_time = glfwGetTime();
+
         if (glfwWindowShouldClose(this->object)) {
             this->exit_window = 1;
             break;
@@ -77,7 +82,7 @@ void Window::loop(std::function<void(Window& This)> _Code) {
         if (this->mouse_pos.y >= this->height) this->mouse_pos.y = this->height - 1;
         else if (this->mouse_pos.y < 0) this->mouse_pos.y = 0;
 
-        this->mouse_right == glfwGetMouseButton(this->object, GLFW_MOUSE_BUTTON_RIGHT);
+        this->mouse_right = glfwGetMouseButton(this->object, GLFW_MOUSE_BUTTON_RIGHT);
         if (this->mouse_right == GLFW_PRESS) this->mouse_right = 1;
         else if (this->mouse_right == GLFW_RELEASE) this->mouse_right = 0;
 
@@ -91,6 +96,13 @@ void Window::loop(std::function<void(Window& This)> _Code) {
 
         glfwPollEvents();
         glfwSwapBuffers(this->object);
+
+        elapsed_time = glfwGetTime() - start_time;
+
+        if (elapsed_time < frame_duration) {
+            std::this_thread::sleep_for(std::chrono::milliseconds((int)(frame_duration - elapsed_time)));
+        }
+
     }
 }
 

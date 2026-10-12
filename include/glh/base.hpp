@@ -8,6 +8,8 @@
 #include <functional>
 #include <cstdio>
 #include <cstring>
+#include <thread>
+#include <chrono>
 
 #include "include/glh/utils.h"
 #include "include/glad/gl.h"

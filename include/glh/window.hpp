@@ -27,6 +27,8 @@ class Window {
     GLint exit_window = 0;
     GLint __log__ = 1;
 
+    GLdouble FPS = 60;
+
     GLFWwindow * object = NULL;
     std::string title = "Unnamed";
     GLint width;
@@ -39,7 +41,7 @@ class Window {
     glm::vec4 back = {28.0f, 34.0f, 32.0f, 1.0f} ;
     glm::vec4 fore = {255.0f, 255.0f, 255.0f, 1.0f} ;
 
-    Window (unsigned int width = 1000, unsigned int height = 800, char * title = NULL);
+    Window (unsigned int width = 1000, unsigned int height = 800, const char * title = NULL);
     ~Window (void);
 
     void loop(std::function<void(Window& This)>);

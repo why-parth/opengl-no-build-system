@@ -1,0 +1,45 @@
+// clear ; gcc .\build.c -o build; if ($?) {.\build}
+
+#include "../build_system/COLL.h"
+
+config {
+
+    C++;
+    libc;
+    build ".\\build";
+
+    /* Linking GLFW */
+    static_link ".\\library\\glfw\\libglfw3dll.a";
+    static_link ".\\library\\ft\\libft.dll.a";
+
+    /* Search Directories */
+    search ".\\include\\ft";
+    
+    /* Copy and Paste */
+    copy ".\\library\\glfw\\glfw3.dll";
+    copy ".\\library\\ft\\libft.dll";
+
+    copy ".\\game\\player.vertex.glsl";
+    copy ".\\game\\player.fragment.glsl";
+
+    copy ".\\source\\text.vertex.glsl";
+    copy ".\\source\\text.fragment.glsl";
+
+    paste ".\\build";
+    
+    /* Input Files */
+    in ".\\game\\main.cpp";
+    in ".\\source\\gl.c";
+    in ".\\source\\window.cpp";
+    in ".\\source\\shader.cpp";
+    in ".\\source\\buffer.cpp";
+    in ".\\source\\interactive.cpp";
+
+    /* Output Name */
+    out "run";
+
+    /* Run */
+    run;
+
+}
+
